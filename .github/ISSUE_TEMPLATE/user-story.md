@@ -1,3 +1,10 @@
+---
+name: User Story
+about: Template for e-commerce microservice tasks
+title: 'US: '
+labels: ['user-story']
+---
+
 **As a** [role]  
 **I need** [function]  
 **So that** [benefit]  
