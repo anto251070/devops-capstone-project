@@ -31,11 +31,13 @@ def bad_request(error):
 
 @app.errorhandler(status.HTTP_404_NOT_FOUND)
 def not_found(error):
-    """Handles resources not found with 404_NOT_FOUND"""
-    message = str(error)
-    app.logger.warning(message)
+    """Handles 404 errors"""
     return (
-        jsonify(status=status.HTTP_404_NOT_FOUND, error="Not Found", message=message),
+        jsonify(
+            status=status.HTTP_404_NOT_FOUND, 
+            error="Not Found", 
+            message=str(error)
+        ),
         status.HTTP_404_NOT_FOUND,
     )
 

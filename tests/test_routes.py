@@ -124,3 +124,31 @@ class TestAccountService(TestCase):
         self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
     # ADD YOUR TEST CASES HERE ...
+    def test_get_account(self):
+        """It should Read a single Account"""
+        account = self._create_accounts(1)[0]
+        resp = self.client.get(
+            f"{BASE_URL}/{account.id}", content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data["name"], account.name)
+
+
+    def test_get_account_not_found(self):
+        """It should not Read an Account that is not found"""
+        # 1. Send a GET request for a non-existent account ID (0)
+        resp = self.client.get(f"{BASE_URL}/0")
+
+        # 2. Assert that the server responded with 404 NOT FOUND
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        
+        # 3. Optional: Verify the error message in the JSON response
+        data = resp.get_json()
+        self.assertIn("could not be found", data["message"])
+
+    def test_method_not_allowed(self):
+        """It should not allow an illegal HTTP method"""
+        # Calling DELETE on /accounts (which only allows GET/POST)
+        resp = self.client.delete(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
