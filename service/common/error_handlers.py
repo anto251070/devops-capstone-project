@@ -34,8 +34,8 @@ def not_found(error):
     """Handles 404 errors"""
     return (
         jsonify(
-            status=status.HTTP_404_NOT_FOUND, 
-            error="Not Found", 
+            status=status.HTTP_404_NOT_FOUND,
+            error="Not Found",
             message=str(error)
         ),
         status.HTTP_404_NOT_FOUND,
