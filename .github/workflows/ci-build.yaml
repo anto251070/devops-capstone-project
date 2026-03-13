@@ -32,17 +32,23 @@ jobs:
           --health-retries 5
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
+      - name: Checkout
+        uses: actions/checkout@v2
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          pip install --upgrade pip wheel
+          pip install -r requirements.txt
+
+      - name: Lint with flake8
+        run: |
+          flake8 service --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 service --count --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Run unit tests with Nose
+        run: nosetests -v --with-spec --spec-color --with-coverage --cover-package=service
+        env:
+          DATABASE_URI: postgresql://postgres:pgs3cr3t@postgres:5432/testdb
 
       - name: Run linter
         run: npm run lint
