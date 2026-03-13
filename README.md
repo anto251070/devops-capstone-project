@@ -5,7 +5,7 @@
 PROJECT NAME: devops-capstone-project
 PROJECT DESCRIPTION: In this devops-capstone-project, I will apply many of the technologies:
     -Product Backlog   
-    -Sprint Backlog
+    -Sprint Backlog.
     -test-driven development (TDD)
     -nosetests
     -GitHub Actions continuous integration (CI) workflow
