@@ -147,6 +147,142 @@ class TestAccountService(TestCase):
         data = resp.get_json()
         self.assertIn("could not be found", data["message"])
 
+    def test_get_account_list(self):
+        """It should Get a list of Accounts"""
+        self._create_accounts(5)
+        resp = self.client.get(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 5)
+ 
+    def test_get_account_list_empty(self):
+        """It should return an empty list when no Accounts exist"""
+        resp = self.client.get(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 0)
+ 
+    def test_get_account_list_checks_data(self):
+        """It should return Accounts with correct field values"""
+        created = self._create_accounts(3)
+        resp = self.client.get(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 3)
+        # Verify each created account appears in the response
+        returned_ids = {account["id"] for account in data}
+        for account in created:
+            self.assertIn(account.id, returned_ids)
+
+
+    ######################################################################
+    #  U P D A T E   T E S T   C A S E S
+    ######################################################################
+ 
+    def test_update_account(self):
+        """It should Update an existing Account"""
+        # create an Account to update
+        test_account = AccountFactory()
+        resp = self.client.post(BASE_URL, json=test_account.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        # update the account
+        new_account = resp.get_json()
+        new_account["name"] = "Something Known"
+        resp = self.client.put(f"{BASE_URL}/{new_account['id']}", json=new_account)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        updated_account = resp.get_json()
+        self.assertEqual(updated_account["name"], "Something Known")
+ 
+    def test_update_account_not_found(self):
+        """It should return 404 when updating an Account that does not exist"""
+        account = AccountFactory()
+        resp = self.client.put(f"{BASE_URL}/0", json=account.serialize())
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        data = resp.get_json()
+        self.assertIn("could not be found", data["message"])
+ 
+    def test_update_account_persists(self):
+        """It should persist changes so a subsequent GET reflects the update"""
+        account = self._create_accounts(1)[0]
+        # change multiple fields
+        payload = account.serialize()
+        payload["name"] = "Persisted Name"
+        payload["email"] = "persisted@example.com"
+        resp = self.client.put(f"{BASE_URL}/{account.id}", json=payload)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        # re-fetch and verify
+        resp = self.client.get(f"{BASE_URL}/{account.id}")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        fetched = resp.get_json()
+        self.assertEqual(fetched["name"], "Persisted Name")
+        self.assertEqual(fetched["email"], "persisted@example.com")
+ 
+    def test_update_account_returns_updated_data(self):
+        """It should return the full updated Account in the response body"""
+        account = self._create_accounts(1)[0]
+        payload = account.serialize()
+        payload["name"] = "Return Check"
+        payload["phone_number"] = "555-9999"
+        resp = self.client.put(f"{BASE_URL}/{account.id}", json=payload)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        # id must be unchanged
+        self.assertEqual(data["id"], account.id)
+        # updated fields must reflect new values
+        self.assertEqual(data["name"], "Return Check")
+        self.assertEqual(data["phone_number"], "555-9999")
+
+    ######################################################################
+    #  D E L E T E   T E S T   C A S E S
+    ######################################################################
+ 
+    def test_delete_account(self):
+        """It should Delete an Account"""
+        account = self._create_accounts(1)[0]
+        resp = self.client.delete(f"{BASE_URL}/{account.id}")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+ 
+    def test_delete_account_not_found_is_idempotent(self):
+        """It should return 204 even when deleting a non-existent Account"""
+        # DELETE is idempotent by REST convention — deleting something that
+        # does not exist should not raise a 404, it should silently succeed
+        resp = self.client.delete(f"{BASE_URL}/0")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+ 
+    def test_delete_account_removes_from_list(self):
+        """It should no longer appear in the account list after deletion"""
+        accounts = self._create_accounts(3)
+        target = accounts[0]
+        resp = self.client.delete(f"{BASE_URL}/{target.id}")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        # list should now contain only 2 accounts
+        resp = self.client.get(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 2)
+        remaining_ids = {a["id"] for a in data}
+        self.assertNotIn(target.id, remaining_ids)
+ 
+    def test_delete_account_get_returns_404(self):
+        """It should return 404 on GET after the Account has been deleted"""
+        account = self._create_accounts(1)[0]
+        # confirm it exists first
+        resp = self.client.get(f"{BASE_URL}/{account.id}")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        # delete it
+        resp = self.client.delete(f"{BASE_URL}/{account.id}")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        # now GET must return 404
+        resp = self.client.get(f"{BASE_URL}/{account.id}")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+ 
+    def test_delete_account_response_has_no_body(self):
+        """It should return an empty body with the 204 response"""
+        account = self._create_accounts(1)[0]
+        resp = self.client.delete(f"{BASE_URL}/{account.id}")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(resp.data, b"")
+
     def test_method_not_allowed(self):
         """It should not allow an illegal HTTP method"""
         # Calling DELETE on /accounts (which only allows GET/POST)
