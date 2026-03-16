@@ -48,7 +48,7 @@ spec:
       - name: image
         value: "python:3.9-slim"
       - name: args
-        value: "--count --max-line-length=127 --statistics --ignore=W292,W293,W391,W392,E301,E303"
+        value: ["--count","--max-line-length=127","--statistics","--ignore=W292,W293,W391,W392,E301,E303"]
       runAfter:
           - clone
     
