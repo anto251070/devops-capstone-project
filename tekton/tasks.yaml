@@ -2,18 +2,41 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: echo
+  name: nose
 spec:
-  description: This task will echo the message.
+  description: This task will run nosetests on the provided input.
+  workspaces:
+    - name: source
   params:
-    - name: message
-      description: The message to echo
+    - name: args
+      description: Arguments to pass to nose
       type: string
+      default: "-v"
+    - name: database_uri
+      description: Database connection string
+      type: string
+      default: "sqlite:///test.db"
   steps:
-    - name: echo-message
-      image: alpine:3
-      command: [/bin/echo]
-      args: ["$(params.message)"]
+    - name: nosetests
+      image: python:3.9-slim
+      workingDir: $(workspaces.source.path)
+      env:
+        - name: DATABASE_URI
+          value: $(params.database_uri)
+      script: |
+        #!/bin/sh
+        set -e
+        echo "***** Installing dependencies *****"
+        python -m pip install --upgrade pip wheel
+        # Ensure requirements.txt exists before installing
+        if [ -f "requirements.txt" ]; then
+          pip install -qr requirements.txt
+        fi
+        # Ensure nose is installed specifically
+        pip install nose 
+        
+        echo "***** Running nosetests with: $(params.args) *****"
+        nosetests $(params.args)
 ---
 apiVersion: tekton.dev/v1beta1
 kind: Task
