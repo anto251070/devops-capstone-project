@@ -1,6 +1,6 @@
 # DevOps Capstone Template
 
-![Build Status](https://github.com/<OWNER>/devops-capstone-project/actions/workflows/ci-build.yaml/badge.svg)
+![Build Status](https://github.com/anto251070/devops-capstone-project/actions/workflows/ci-build.yaml/badge.svg)
 
 PROJECT NAME: devops-capstone-project
 PROJECT DESCRIPTION: In this devops-capstone-project, I will apply many of the technologies:
