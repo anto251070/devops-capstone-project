@@ -15,8 +15,10 @@ PROJECT DESCRIPTION: In this devops-capstone-project, I will apply many of the t
     -Tekton continuous delivery (CD) pipeline
 to build and deliver a fully functional Customer Accounts microservice.
 
+#Badge
+[![CI Build](https://github.com/anto251070/devops-capstone-project/actions/workflows/ci-build.yaml/badge.svg)](https://github.com/anto251070/devops-capstone-project/actions/workflows/ci-build.yaml)
 
-[![CI Build](https://github.com/<your-username>/devops-capstone-project/actions/workflows/ci-build.yaml/badge.svg)](https://github.com/<your-username>/devops-capstone-project/actions/workflows/ci-build.yaml)
+
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python 3.9](https://img.shields.io/badge/Python-3.9-green.svg)](https://shields.io/)
 
